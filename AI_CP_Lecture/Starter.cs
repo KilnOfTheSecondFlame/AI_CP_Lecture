@@ -30,6 +30,8 @@ namespace AI_CP_Lecture
             //Tsp.Solve(3, "../../data/att48.xml");
 
             //Xkcd.Solve();
+            
+            MagicSquare.Solve(3);
 
         }
 
