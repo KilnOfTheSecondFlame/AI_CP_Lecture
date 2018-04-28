@@ -18,7 +18,7 @@ namespace AI_CP_Lecture
 
             //Cryptogram.Solve();
 
-            Grocery.Solve();
+            //Grocery.Solve();
 
             //KnightTour.Solve(6);
 
