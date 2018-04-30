@@ -31,7 +31,8 @@ namespace AI_CP_Lecture
 
             //Xkcd.Solve();
             
-            MagicSquare.Solve(3);
+            //MagicSquare.Solve(3);
+            Binoxxo.Solve(Binoxxo1);
 
         }
 
