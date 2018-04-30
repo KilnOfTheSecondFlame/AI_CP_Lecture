@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using Google.OrTools.ConstraintSolver;
 
@@ -12,6 +11,7 @@ namespace AI_CP_Lecture {
 
             IntVar[,] square = solver.MakeIntVarMatrix(sideLength, sideLength, 1, sideLength * sideLength);
             IntVar sum = solver.MakeIntVar(1, sideLength * sideLength * sideLength);
+                
             // Add constraints
             // All different numbers
             solver.Add(square.Flatten().AllDifferent());
