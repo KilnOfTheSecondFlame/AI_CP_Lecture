@@ -12,14 +12,12 @@ namespace AI_CP_Lecture {
         public static void Solve(String[,] inputBinoxxo) {
             var solver = new Solver("Binoxxo");
             int sideLength = inputBinoxxo.GetLength(0);
-            
-            if (inputBinoxxo.Length != sideLength * sideLength)
-            {
+
+            if (inputBinoxxo.Length != sideLength * sideLength) {
                 throw new ArgumentException("This is not a valid square Binoxxo puzzle.");
             }
-            
-            if (inputBinoxxo.Length % 2 != 0)
-            {
+
+            if (inputBinoxxo.Length % 2 != 0) {
                 throw new ArgumentException("This Binoxxo puzzle does not have an even sidelength!.");
             }
 
@@ -48,12 +46,27 @@ namespace AI_CP_Lecture {
             // Constraints
             // In jeder Zeile gleich viele X wie O's
             for (int row = 0; row < sideLength; row++) {
-                solver.Add((from column in sideRange select binoxxo[row, column]).ToArray().Sum() == sideLength/2);
+                solver.Add((from column in sideRange select binoxxo[row, column]).ToArray().Sum() == sideLength / 2);
+                // Nicht 3 O oder 3 X in einer Zeile nacheinander
+                for (int i = 0; i < sideLength - 2; i++) {
+                    solver.Add((binoxxo[row, i] + binoxxo[row, i + 1] + binoxxo[row, i + 1] != 0));
+                    solver.Add((binoxxo[row, i] + binoxxo[row, i + 1] + binoxxo[row, i + 1] != 3));
+                }
             }
+
             // In jeder Spalte gleich viele X wie O's
             for (int column = 0; column < sideLength; column++) {
-                solver.Add((from row in sideRange select binoxxo[row, column]).ToArray().Sum() == sideLength/2);
+                solver.Add((from row in sideRange select binoxxo[row, column]).ToArray().Sum() == sideLength / 2);
+                // Nicht 3 O oder 3 X in einer Spalte nacheinander
+                for (int j = 0; j < sideLength - 2; j++) {
+                    solver.Add((binoxxo[column, j] + binoxxo[column, j + 1] + binoxxo[column, j + 1] != 0));
+                    solver.Add((binoxxo[column, j] + binoxxo[column, j + 1] + binoxxo[column, j + 1] != 3));
+                }
             }
+
+            // Alle Spalten und Zeilen sind einzigartig
+
+
             DecisionBuilder decisionBuilder = null;
 
             solver.NewSearch(decisionBuilder);
