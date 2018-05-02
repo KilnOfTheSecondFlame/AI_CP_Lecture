@@ -29,9 +29,13 @@ namespace AI_CP_Lecture {
             for (int row = 0; row < sideLength; row++) {
                 for (int column = 0; column < sideLength; column++) {
                     String preassignedValue = inputBinoxxo[row, column];
-                    if (!preassignedValue.Equals("")) {
-                        int value = (preassignedValue.Equals("X") ? 1 : 0);
-                        solver.Add(binoxxo[row, column] == value);
+                    if (!string.IsNullOrEmpty(preassignedValue)) {
+                        if (preassignedValue.Equals("X")) {
+                            solver.Add(binoxxo[row, column] == 1);
+                        }
+                        if (preassignedValue.Equals("O")) {
+                            solver.Add(binoxxo[row, column] == 0);
+                        }
                     }
                 }
             }
@@ -66,12 +70,13 @@ namespace AI_CP_Lecture {
 
             // Alle Spalten und Zeilen sind einzigartig
 
-
-            DecisionBuilder decisionBuilder = null;
+            DecisionBuilder decisionBuilder =
+                solver.MakePhase(binoxxo.Flatten(), Solver.INT_VAR_SIMPLE, Solver.INT_VALUE_SIMPLE);
+            ;
 
             solver.NewSearch(decisionBuilder);
             while (solver.NextSolution()) {
-                PrintSolution();
+                PrintSolution(binoxxo);
                 Console.WriteLine("SideLength: " + sideLength);
                 Console.Write("\n");
             }
@@ -82,13 +87,15 @@ namespace AI_CP_Lecture {
             solver.EndSearch();
         }
 
-        private static void PrintSolution() {
-//            for (int i = 0; i < magicSquare.GetLength(0); i++) {
-//                for (int j = 0; j < magicSquare.GetLength(1); j++) {
-//                    Console.Write("[{00}]", magicSquare[i, j].Value());
-//                }
-//                Console.Write("\n");
-//            }
+        private static void PrintSolution(IntVar[,] binoxxo) {
+            for (int i = 0; i < binoxxo.GetLength(0); i++) {
+                for (int j = 0; j < binoxxo.GetLength(1); j++) {
+                    String value = (binoxxo[i, j].Value() == 0 ? "O" : "X");
+                    Console.Write("[{0}]", value);
+                }
+
+                Console.Write("\n");
+            }
         }
     }
 }
