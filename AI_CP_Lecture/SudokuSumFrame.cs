@@ -5,18 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AI_CP_Lecture
-{
-    class SudokuSumFrame
-    {
+namespace AI_CP_Lecture {
+    class SudokuSumFrame {
         /*
          * Create Model and Solve Sudoku:
          */
 
-        public static void Solve(int[] frame)
-        {
-            if (frame.Length != 3 *12)
-            {
+        public static void Solve(Tuple<int[], int[], int[], int[]> inputTuple) {
+            // Flatten the tuple
+            int[] frame = new int[4 * 9];
+            IEnumerable<int> frameRange = Enumerable.Range(0, 9);
+            var enumerable = frameRange.ToList();
+            (from j in enumerable select inputTuple.Item1[j]).ToArray().CopyTo(frame, 0);
+            (from j in enumerable select inputTuple.Item4[j]).ToArray().CopyTo(frame, 9);
+            (from j in enumerable select inputTuple.Item2[j]).ToArray().CopyTo(frame, 18);
+            (from j in enumerable select inputTuple.Item3[j]).ToArray().CopyTo(frame, 27);
+
+
+            if (frame.Length != 3 * 12) {
                 throw new ArgumentException("This is not a valid 9x9 Sudoku Puzzle.");
             }
 
@@ -34,31 +40,31 @@ namespace AI_CP_Lecture
 
 
             // Each Row / Column contains only different values: 
-            foreach (int i in range)
-            {
+            foreach (int i in range) {
                 // Rows:
                 solver.Add((from j in range select board[i, j]).ToArray().AllDifferent());
                 //first three cells
-                solver.Add((from j in range select board[i, j]).ToArray().Take(3).ToArray().Sum() == frame[(9*1)+i] );
+                solver.Add((from j in range select board[i, j]).ToArray().Take(3).ToArray().Sum() ==
+                           frame[1 * 9 + i]);
                 //last three cells
-                solver.Add( (from j in range select board[i, j]).ToArray().Skip(6).Take(3).ToArray().Sum() == frame[(2*9)+i]);
+                solver.Add((from j in range select board[i, j]).ToArray().Skip(6).Take(3).ToArray().Sum() ==
+                           frame[(2 * 9) + i]);
                 // Columns:
                 solver.Add((from j in range select board[j, i]).ToArray().AllDifferent());
                 //first three cells
                 solver.Add((from j in range select board[j, i]).ToArray().Take(3).ToArray().Sum() == frame[i]);
                 //last three cells
-                solver.Add((from j in range select board[j, i]).ToArray().Skip(6).Take(3).ToArray().Sum() == frame[(3 * 9)+i]);
+                solver.Add((from j in range select board[j, i]).ToArray().Skip(6).Take(3).ToArray().Sum() ==
+                           frame[(3 * 9) + i]);
             }
 
 
             // Each Sub-Matrix contains only different values:
-            foreach (int i in cell)
-            {
-                foreach (int j in cell)
-                {
+            foreach (int i in cell) {
+                foreach (int j in cell) {
                     solver.Add(
                         (from di in cell from dj in cell select board[i * cellSize + di, j * cellSize + dj]).ToArray()
-                            .AllDifferent());
+                        .AllDifferent());
                 }
             }
 
@@ -70,8 +76,7 @@ namespace AI_CP_Lecture
 
             solver.NewSearch(db);
 
-            while (solver.NextSolution())
-            {
+            while (solver.NextSolution()) {
                 PrintSolution(board, frame);
                 Console.WriteLine();
                 Console.ReadKey();
@@ -91,34 +96,29 @@ namespace AI_CP_Lecture
          * Print Game Board:
          */
 
-        private static void PrintSolution(IntVar[,] board, int[] frameSums)
-        {
-            for (int i = 0; i < 9; i++)
-            {
+        private static void PrintSolution(IntVar[,] board, int[] frameSums) {
+            for (int i = 0; i < 9; i++) {
                 Console.Write("  ");
                 Console.Write(frameSums[i].ToString("D2"));
             }
+
             Console.WriteLine();
 
-            for (int i = 0; i < board.GetLength(0); i++)
-            {
-                Console.Write(frameSums[1* 9 + i].ToString("D2"));
+            for (int i = 0; i < board.GetLength(0); i++) {
+                Console.Write(frameSums[1 * 9 + i].ToString("D2"));
 
-                for (int j = 0; j < board.GetLength(1); j++)
-                {
+                for (int j = 0; j < board.GetLength(1); j++) {
                     Console.Write("[{0}] ", board[i, j].Value());
                 }
 
-                Console.Write(frameSums[2*9+i].ToString("D2"));
+                Console.Write(frameSums[2 * 9 + i].ToString("D2"));
                 Console.WriteLine();
             }
-            
-            for (int i = 3 * 9; i < 3 * 9+9; i++)
-            {
+
+            for (int i = 3 * 9; i < 3 * 9 + 9; i++) {
                 Console.Write("  ");
                 Console.Write(frameSums[i].ToString("D2"));
             }
         }
     }
 }
-

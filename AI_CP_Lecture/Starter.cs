@@ -82,7 +82,7 @@ namespace AI_CP_Lecture
             // Knapsack Problem from slides
             //Knapsack.Solve(AI_CP_Lecture.Starter.Knapsack1);
             
-            
+            SudokuSumFrame.Solve(SumFrameSudoku1);
 
         }
 
