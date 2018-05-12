@@ -12,7 +12,7 @@ using Google.OrTools.ConstraintSolver;
  *
  * There are two Versions: as Constraint and as Optimization Problem.
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 

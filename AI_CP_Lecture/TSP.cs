@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 using Google.OrTools.ConstraintSolver;
 
 /*
- * This model solves the travelling salesman puzzle presented in CP part 3.
+ * This model solves the travelling salesman problem presented in CP part 4.
  *
  * Given a list of cities (points of interest) and the distances (costs) between each pair of cities. 
  * What is the shortest possible route that visits each city exactly once and returns to the origin city ?
  * There are two ways of getting input to this model: adjacency matrices or XML benchmark files.
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 
@@ -23,36 +21,57 @@ namespace AI_CP_Lecture
 
     public class Tsp
     {
-        /*
-         * Number of Vehicles:
-         */
 
-        public static void Solve(int vehicles, string pathToXml = null)
+        public static void Solve(int vehicles, Distance distances)
         {
-            /*
-             * Add custom distance function
-             */
-
-            var dist = (pathToXml == null) ? new Distance() : new XmlDistance(pathToXml);
 
             /*
              * Generate constraint model
              */
 
-			// Third argument defines depot, i.e. start-end node for round trip.
-            var model = new  RoutingModel(dist.MapSize(), vehicles, 0);
+            // Third argument defines depot, i.e. start-end node for round trip.
+            var model = new RoutingModel(distances.MapSize(), vehicles, 0);
 
-            model.SetCost(dist);
+            // Node costs vs. Arc Costs
+            model.SetArcCostEvaluatorOfAllVehicles(distances);
 
             /*
-             * This modification forces all Vehicles to visit at least one city.
+             * A vehicle must not visit more than 7 cities
              */
 
-            /*for (int i = 0; i < Vehicles; i++) {
+            //model.AddConstantDimension(1, 7, true, "count");
 
-                IntVar first = model.NextVar(model.Start(i));
-                first.SetMax(dist.MapSize() - 1);
-            }
+            /*
+             * A vehicle must visit at least 3 cities
+             */
+
+             /*model.AddConstantDimension(1, Int32.MaxValue, true, "count");
+             var count = model.GetDimensionOrDie("count");
+             for (int i = 0; i < vehicles; i++) {
+                 count.CumulVar(model.End(i)).SetMin(3);
+             }*/
+
+            /*
+             * City 3 and 5 must NOT be visited by the same vehicle
+             */
+
+            //model.solver().Add(model.VehicleVar(3) != model.VehicleVar(5));
+
+            /*
+             * City 3 must be visited before city 5 (not necessarily by the same vehicle)
+             */
+
+            /*model.AddConstantDimension(1, Int32.MaxValue, true, "time");
+            var time = model.GetDimensionOrDie("time");
+            model.solver().Add(time.CumulVar(3) < time.CumulVar(5));*/
+
+            /*
+             * City 3 must be visited right after city 5 (not necessarily by the same vhicle)
+             */
+
+            /*model.AddConstantDimension(1, Int32.MaxValue, true, "time");
+            var time = model.GetDimensionOrDie("time");
+            model.solver().Add(time.CumulVar(5) + 1 == time.CumulVar(3));*/
 
             /*
              * Solve problem and display solution
@@ -62,47 +81,33 @@ namespace AI_CP_Lecture
 
             if (assignment != null)
             {
+                Console.WriteLine("Depot: " + model.GetDepot());
                 Console.WriteLine("Total Distance: " + assignment.ObjectiveValue() + "\n");
 
                 for (int i = 0; i < vehicles; i++)
                 {
                     /*
-                     * Display Round Trip:
+                     * Display Trips:
                      */
 
-                    Console.WriteLine("Round Trip for Vehicle " + i + "\n");
+                    Console.WriteLine("Round Trip for Vehicle " + i + ":");                  
 
-                    for (long node = model.Start(i); node < model.End(i); node = model.Next(assignment, node))
+                    long total = 0;
+                    var source = model.Start(i);
+
+                    while(!model.IsEnd(source))
                     {
-                        Console.Write(node + " -> ");
-                    }
+                        var target = model.Next(assignment, source);
 
-                    Console.WriteLine(model.Start(i) + "\n");
+                        var from = model.IndexToNode(source);
+                        var to   = model.IndexToNode(target);
 
-                    /*
-                     * Display individual Section Distances for Verification:
-                     */
-
-                    var source = (int) model.Start(i);
-
-                    while (source < model.End(i))
-                    {
-                        var target = (int) model.Next(assignment, source);
-
-                        if (source < dist.MapSize() && target < dist.MapSize())
-                        {
-                            Console.WriteLine("From " + source + " travel to " + target + " -> distance = " +
-                                              dist.Run(source, target));
-                        }
-                        else if (source < dist.MapSize())
-                        {
-                            Console.WriteLine("From " + source + " travel to 0 -> distance = " + dist.Run(source, 0));
-                        }
-
+                        total += distances.Run(from, to);
+                        Console.WriteLine(String.Format(" - From {0,-3} travel to {1,-3} with distance: {2,-3}", distances.ToString(from), distances.ToString(to), distances.Run(from, to)));
                         source = target;
                     }
 
-                    Console.WriteLine("\n");
+                    Console.WriteLine("Total Distance for Vehicle " + i + ": " + total + "\n");
                 }
             }
 
@@ -110,68 +115,292 @@ namespace AI_CP_Lecture
         }
 
         /*
-         * Customized distance functions
+         * Static Distance Matrices
          */
 
-        private class Distance : NodeEvaluator2
+        public class StaticDistance : Distance
         {
-            protected long[,] Costs =
-            {
-                {0, 1, 2, 4},
-                {3, 0, 1, 4},
-                {8, 2, 0, 6},
-                {9, 4, 3, 0}
-            };
 
-            public override long Run(int i, int j)
-            {
-                return Costs[i, j];
-            }
+            private string[] cities;
+            private long[,] distances;
 
-            public int MapSize()
-            {
-                return Costs.GetLength(0);
-            }
-        }
+            /*
+             * Constructor: 
+             */
 
-        private class XmlDistance : Distance
-        {
-            public XmlDistance(String path)
+            public StaticDistance(long[,] distances, string[] cities = null)
             {
-                Parse(path);
-            }
+                if(distances.GetLength(0) != distances.GetLength(1))
+                {
+                    throw new ArgumentException("Distance matrix is not square.");
+                }
 
-            public override long Run(int i, int j)
-            {
-                return Costs[i, j];
+                if(cities == null)
+                {
+                    cities = Array.ConvertAll(Enumerable.Range(0, distances.GetLength(0)).ToArray(), x => x.ToString());
+                }
+
+                if (cities.Length != distances.GetLength(0))
+                {
+                    throw new ArgumentException("Distance matrix dimensions do not match the number of cities.");
+                }
+
+                this.cities = cities;
+                this.distances = distances;
             }
 
             /*
-             * This method parses XML input documents for TSP benchmark examples.
-             * http://www.iwr.uni-heidelberg.de/groups/comopt/software/TSPLIB95/XML-TSPLIB/instances/
+             * Distance Function:
              */
 
-            private void Parse(String file)
+            public override long Run(int i, int j)
             {
-                XDocument doc = XDocument.Load(file);
+                return distances[i, j];
+            }
 
-                XElement[] vertices = doc.Descendants("vertex").ToArray();
-                var result = new long[vertices.Length, vertices.Length];
+            /*
+             * Number of Cities: 
+             */
 
-                for (int i = 0; i < vertices.Length; i++)
+            public override int MapSize()
+            {
+                return cities.Length;
+            }
+            
+            /*
+             * City Name:
+             */
+
+            public override string ToString(int node)
+            {
+                return cities[node];
+            }
+        }
+
+        /*
+         * Distances from GPS Coordinates
+         */
+
+        public class GPS : Distance
+        {
+
+            private string[] cities;
+            private double[,] gps;
+
+            // Mean radius of Earth in miles
+            private static int EARTH = 3959;
+
+            /*
+             * Constructors: 
+             */
+
+            public GPS(double[,] gps, string[] cities = null)
+            {
+                if (gps.GetLength(1) != 2)
                 {
-                    XElement[] edges = vertices[i].Descendants("edge").ToArray();
-
-                    foreach (XElement edge in edges)
-                    {
-
-                        int target = Convert.ToInt32(edge.Value);
-                        decimal dec = Decimal.Parse(edge.Attribute("cost").Value, NumberStyles.Float, CultureInfo.InvariantCulture);
-                        result[i, target] = (long)dec;
-                    }
+                    throw new ArgumentException("Wrong matrix dimensions. Array of pairs expected");
                 }
 
-                Costs = result;
+                if (cities == null)
+                {
+                    cities = Array.ConvertAll(Enumerable.Range(0, gps.GetLength(0)).ToArray(), x => x.ToString());
+                }
+
+                if (cities.Length != gps.GetLength(0))
+                {
+                    throw new ArgumentException("Distance matrix dimensions do not match the number of cities.");
+                }
+
+                this.cities = cities;
+                this.gps = gps;
+            }
+
+            /*
+             * Distance Function:
+             */
+
+            public override long Run(int i, int j)
+            {
+  
+                return (long)ToDistance(gps[i, 0], gps[i, 1], gps[j, 0], gps[j, 1]);
+
+            }
+
+            /*
+             * Number of Cities: 
+             */
+
+            public override int MapSize()
+            {
+                return cities.Length;
+            }
+
+            /*
+             * City Name:
+             */
+
+            public override string ToString(int node)
+            {
+                return cities[node];
+            }
+
+            /*
+             * Haversine Distance used to calculate distances on sea (assumes earth as perfect sphere)
+             */
+
+            private double ToDistance(double lat1, double long1, double lat2, double long2)
+            {
+                var degrees_to_radians = Math.PI / 180.0;
+                var phi1 = lat1 * degrees_to_radians;
+                var phi2 = lat2 * degrees_to_radians;
+                var lambda1 = long1 * degrees_to_radians;
+                var lambda2 = long2 * degrees_to_radians;
+                var dphi = phi2 - phi1;
+                var dlambda = lambda2 - lambda1;
+
+                var a = Haversine(dphi) + Math.Cos(phi1) * Math.Cos(phi2) * Haversine(dlambda);
+                var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                return EARTH * c;
+            }
+
+            private double Haversine(double angle)
+            {
+                return Math.Pow(Math.Sin(angle / 2), 2);
+            }
+ 
+        }
+
+        /*
+         * Euclidean Distances (e.g. for drilling problems) 
+         */
+
+        public class Euclid : Distance
+        {
+
+            private string[] cities;
+            private int[,] coord;
+
+            /*
+             * Constructor: 
+             */
+
+            public Euclid(int[,] coord, string[] cities = null)
+            {
+                if (coord.GetLength(1) != 2)
+                {
+                    throw new ArgumentException("Wrong matrix dimensions. Array of pairs expected");
+                }
+
+                if (cities == null)
+                {
+                    cities = Array.ConvertAll(Enumerable.Range(0, coord.GetLength(0)).ToArray(), x => x.ToString());
+                }
+
+                if (cities.Length != coord.GetLength(0))
+                {
+                    throw new ArgumentException("Distance matrix dimensions do not match the number of cities.");
+                }
+
+                this.cities = cities;
+                this.coord = coord;
+            }
+
+            /*
+             * Distance Function:
+             */
+
+            public override long Run(int i, int j)
+            {
+
+                return (long)Math.Sqrt(Math.Pow((coord[i, 0] - coord[j, 0]), 2) + Math.Pow((coord[i, 1] - coord[j, 1]), 2));
+
+            }
+
+            /*
+             * Number of Cities: 
+             */
+
+            public override int MapSize()
+            {
+                return cities.Length;
+            }
+
+            /*
+             * City Name:
+             */
+
+            public override string ToString(int node)
+            {
+                return cities[node];
+            }
+        }
+
+        /*
+         * Manhattan Distances
+         */
+
+        public class Manhattan : Distance
+        {
+
+            private string[] cities;
+            private int[,] coord;
+
+            // Block size West to East
+            private static int BLOCK_WIDTH = 228 / 2;
+
+            // Block size West to East
+            private static int BLOCK_HEIGHT = 80;
+
+            /*
+             * Constructor: 
+             */
+
+            public Manhattan(int[,] coord, string[] cities = null)
+            {
+                if (coord.GetLength(1) != 2)
+                {
+                    throw new ArgumentException("Wrong matrix dimensions. Array of pairs expected");
+                }
+
+                if (cities == null)
+                {
+                    cities = Array.ConvertAll(Enumerable.Range(0, coord.GetLength(0)).ToArray(), x => x.ToString());
+                }
+
+                if (cities.Length != coord.GetLength(0))
+                {
+                    throw new ArgumentException("Distance matrix dimensions do not match the number of cities.");
+                }
+
+                this.cities = cities;
+                this.coord = coord;
+            }
+
+            /*
+             * Distance Function:
+             */
+
+            public override long Run(int i, int j)
+            {
+                return (long)Math.Abs((coord[i, 0] - coord[j, 0])) * BLOCK_WIDTH + Math.Abs((coord[i, 1] - coord[j, 1]) * BLOCK_HEIGHT);
+            }
+
+            /*
+             * Number of Cities: 
+             */
+
+            public override int MapSize()
+            {
+                return cities.Length;
+            }
+
+            /*
+             * City Name:
+             */
+
+            public override string ToString(int node)
+            {
+                return cities[node];
             }
         }
     }

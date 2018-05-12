@@ -8,7 +8,7 @@ using Google.OrTools.ConstraintSolver;
  *
  * Fill in numbers from 1 to 9 so that each row, column and 3x3 block contains each number exactly once.
  *
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 

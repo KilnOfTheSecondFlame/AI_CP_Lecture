@@ -11,7 +11,7 @@ using Google.OrTools.ConstraintSolver;
  * Numbers must not start with a zero.
  * The following equation must hold: SEND + MORE = MONEY
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 

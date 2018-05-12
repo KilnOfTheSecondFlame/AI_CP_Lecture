@@ -10,7 +10,7 @@ using Google.OrTools.ConstraintSolver;
  * As optimization problem:
  * Given a set of items with weights and a maximum weight N. Select items such that the sum of the chosen items is as close as possible to N without exceeding N.
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 
@@ -41,22 +41,22 @@ namespace AI_CP_Lecture
 
             int[] prices = {215, 275, 335, 355, 420, 580};
 
-            ConstraintModel(solver, items, prices);
+            ConstraintModel(solver, items, prices, 1505);
 
-            OptimizationModel(solver, items, prices);
+            OptimizationModel(solver, items, prices, 2000);
         }
 
         /*
          * Xkcd Puzzle as Constraint Problem:
          */
 
-        private static void ConstraintModel(Solver solver, IntVar[] items, int[] prices)
+        private static void ConstraintModel(Solver solver, IntVar[] items, int[] prices, int total)
         {
             /*
              * Constraints:
              */
 
-            solver.Add(solver.MakeScalProd(items, prices) == 1505);
+            solver.Add(solver.MakeScalProd(items, prices) == total);
 
             /*
              * Start Solver:
@@ -64,7 +64,7 @@ namespace AI_CP_Lecture
 
             DecisionBuilder db = solver.MakePhase(items, Solver.INT_VAR_SIMPLE, Solver.INT_VALUE_SIMPLE);
 
-            Console.WriteLine("XKCD Constraint Problem:\n\n");
+            Console.WriteLine("XKCD Constraint Problem:\n");
 
             solver.NewSearch(db);
 
@@ -78,10 +78,10 @@ namespace AI_CP_Lecture
                 Console.WriteLine();
             }
 
-            Console.WriteLine("\nSolutions: {0}", solver.Solutions());
+            Console.WriteLine("Solutions: {0}", solver.Solutions());
             Console.WriteLine("WallTime: {0}ms", solver.WallTime());
             Console.WriteLine("Failures: {0}", solver.Failures());
-            Console.WriteLine("Branches: {0} ", solver.Branches());
+            Console.WriteLine("Branches: {0} \n\n", solver.Branches());
 
             solver.EndSearch();
 
@@ -92,7 +92,7 @@ namespace AI_CP_Lecture
          * Xkcd Puzzle as Optimization Problem:
          */
 
-        private static void OptimizationModel(Solver solver, IntVar[] items, int[] prices)
+        private static void OptimizationModel(Solver solver, IntVar[] items, int[] prices, int total)
         {
             /*
              * Objective Function:
@@ -104,7 +104,7 @@ namespace AI_CP_Lecture
              * Constraints:
              */
 
-            solver.Add(obj < 2000);
+            solver.Add(obj < total);
 
             /*
              * Start Solver:
@@ -116,7 +116,7 @@ namespace AI_CP_Lecture
             col.AddObjective(obj);
             col.Add(items);
 
-            Console.WriteLine("Xkcd Optimization Problem:\n");
+            Console.WriteLine("Xkcd Optimization Problem:");
 
             if (solver.Solve(db, col))
             {
@@ -131,12 +131,10 @@ namespace AI_CP_Lecture
                 Console.WriteLine();
             }
 
-            Console.WriteLine("\nSolutions: {0}", solver.Solutions());
+            Console.WriteLine("Solutions: {0}", solver.Solutions());
             Console.WriteLine("WallTime: {0}ms", solver.WallTime());
             Console.WriteLine("Failures: {0}", solver.Failures());
             Console.WriteLine("Branches: {0} ", solver.Branches());
-
-            solver.EndSearch();
 
             Console.ReadKey();
         }

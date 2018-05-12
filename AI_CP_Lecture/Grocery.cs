@@ -10,7 +10,7 @@ using Google.OrTools.ConstraintSolver;
  * I'll try again. Hah, with adding them the price still comes to $7.11.» 
  * What were the prices of the four items?
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 
@@ -43,9 +43,9 @@ namespace AI_CP_Lecture
 
             // Symmetry breaking constraint:
 
-            solver.Add(p1 <= p2);
+            /*solver.Add(p1 <= p2);
             solver.Add(p2 <= p3);
-            solver.Add(p3 <= p4);
+            solver.Add(p3 <= p4);*/
 
             // Start Solver:
 

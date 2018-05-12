@@ -4,11 +4,11 @@ using System.Linq;
 using Google.OrTools.ConstraintSolver;
 
 /*
- * This model solves the knight tour puzzle presented in CP part 3.
+ * This model solves the knight tour puzzle presented in CP part 4.
  *
  * A knight's tour is a sequence of moves of a knight on a chessboard such that the knight visits every cell exactly once.
  * 
- * Lecture: Introduction to Artificial Intelligence
+ * Lecture: Artificial Intelligence: Search & Optimization
  * Author: Marc Pouly
  */
 
@@ -51,21 +51,16 @@ namespace AI_CP_Lecture
 
             /*
              * Variables that are part of the tour:
+             * This is expected by the nocycle global contraint.
              */
 
-            IntVar[] active = solver.MakeBoolVarArray(next.Length);
-
-            foreach (IntVar t in active)
-            {
-                solver.Add(t == 1);
-            }
+            IntVar[] active = solver.MakeIntVarArray(next.Length, 1, 1);
 
             /*
              * Do not visit twice the same cell:
              */
 
             solver.Add(solver.MakeNoCycle(next, active, null));
-
 
             /*
              * Start solver:
@@ -77,7 +72,7 @@ namespace AI_CP_Lecture
 
             if (solver.NextSolution())
             {
-                Console.WriteLine("The Knight's Tour starts in cell 0:\n\n");
+                Console.WriteLine("The Knight's Tour starts in cell 0:\n");
 
                 for (int i = 0; i < next.Length; i++)
                 {
