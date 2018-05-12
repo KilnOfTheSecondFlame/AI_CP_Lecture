@@ -103,7 +103,8 @@ namespace AI_CP_Lecture
                         var to   = model.IndexToNode(target);
 
                         total += distances.Run(from, to);
-                        Console.WriteLine(String.Format(" - From {0,-3} travel to {1,-3} with distance: {2,-3}", distances.ToString(from), distances.ToString(to), distances.Run(from, to)));
+                        Console.WriteLine(
+                            $" - From {distances.ToString(@from),-3} travel to {distances.ToString(to),-3} with distance: {distances.Run(@from, to),-3}");
                         source = target;
                     }
 

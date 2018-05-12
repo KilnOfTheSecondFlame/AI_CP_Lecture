@@ -40,7 +40,7 @@ namespace AI_CP_Lecture
              */
 
             // Knight Tour Example from Slides - try different board sizes
-            KnightTour.Solve(5);
+            // KnightTour.Solve(5);
 
             // Travelling Salesman: 1 vehicle, random distances
             //Tsp.Solve(1, GenerateRandomDistanceMatrix(10));
@@ -81,6 +81,8 @@ namespace AI_CP_Lecture
 
             // Knapsack Problem from slides
             //Knapsack.Solve(AI_CP_Lecture.Starter.Knapsack1);
+            
+            
 
         }
 
