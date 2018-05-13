@@ -79,7 +79,6 @@ namespace AI_CP_Lecture {
             while (solver.NextSolution()) {
                 PrintSolution(board, frame);
                 Console.WriteLine();
-                Console.ReadKey();
             }
 
             Console.WriteLine("\nSolutions: {0}", solver.Solutions());
